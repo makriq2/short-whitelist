@@ -5,7 +5,9 @@ import time
 
 SRC = 'https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt'
 OUT = Path('data/wl-first-300.txt')
-LIMIT = 300
+HEAD_COUNT = 50
+RANDOM_COUNT = 150
+SEED = 20260328
 
 last = None
 for attempt in range(5):
@@ -20,8 +22,15 @@ for attempt in range(5):
             raise
         time.sleep(2 * (attempt + 1))
 
+import random
+
 lines = [line for line in raw.splitlines() if line.strip()]
-trimmed = lines[:LIMIT]
+head = lines[:HEAD_COUNT]
+tail = lines[HEAD_COUNT:]
+rng = random.Random(SEED)
+sample_n = min(RANDOM_COUNT, len(tail))
+random_part = rng.sample(tail, sample_n) if sample_n else []
+trimmed = head + random_part
 OUT.parent.mkdir(parents=True, exist_ok=True)
 OUT.write_text('\n'.join(trimmed) + ('\n' if trimmed else ''), encoding='utf-8')
-print(f'fetched={len(lines)} kept={len(trimmed)} out={OUT}')
+print(f'fetched={len(lines)} kept={len(trimmed)} head={len(head)} random={len(random_part)} seed={SEED} out={OUT}')
