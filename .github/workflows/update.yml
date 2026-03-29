@@ -3,7 +3,7 @@ name: update-mobile-whitelist-mixed-200
 on:
   workflow_dispatch:
   schedule:
-    - cron: '17 * * * *'
+    - cron: '0 */6 * * *'
 
 permissions:
   contents: write
