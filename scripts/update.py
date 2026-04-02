@@ -9,16 +9,17 @@ SOURCES = [
     'https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt',
     'https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt',
 ]
-OUT = Path('data/mobile-whitelist-mixed-200.txt')
+OUT = Path('data/short-whitelist.txt')
 HEAD_COUNT = 40
 RANDOM_COUNT = 160
+USER_AGENT = 'short-whitelist-bot/1.0'
 
 
 def fetch(url: str) -> str:
     last = None
     for attempt in range(5):
         try:
-            req = Request(url, headers={'User-Agent': 'mobile-whitelist-mixed-200-bot/1.0'})
+            req = Request(url, headers={'User-Agent': USER_AGENT})
             with urlopen(req, timeout=30) as r:
                 return r.read().decode('utf-8', 'replace')
         except Exception as e:
