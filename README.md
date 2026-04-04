@@ -1,69 +1,69 @@
 # short-key-list
 
-`short-key-list` publishes a rotating list of `200` tested VLESS keys collected from public upstream sources.
+`short-key-list` публикует короткий список из `200` протестированных VLESS-ключей, собранных из публичных апстримов.
 
-Every update cycle the pipeline:
+В каждом цикле пайплайн:
 
-- aggregates keys from several public lists;
-- removes duplicates;
-- validates candidates through a real `xray` outbound;
-- sends a live request to `https://www.gstatic.com/generate_204`;
-- keeps per-key historical ratings across runs;
-- publishes a final list of `200` working keys chosen from the successful set.
+- собирает ключи из нескольких публичных источников;
+- убирает дубликаты;
+- проверяет кандидатов через реальный `xray` outbound;
+- отправляет живой запрос к `https://www.gstatic.com/generate_204`;
+- ведет исторический рейтинг ключей между запусками;
+- публикует итоговый список из `200` рабочих ключей.
 
-The current public output lives here:
+Актуальный публичный файл:
 
 - `data/short-key-list.txt`
 
-## What makes this list different
+## Чем этот список отличается
 
-This repository does not mirror raw upstream dumps.
+Этот репозиторий не зеркалит сырые апстрим-дампы как есть.
 
-It tries to keep the published list usable by checking keys at publish time and by giving more weight to keys that have a better success history. The result is still dynamic, but it is not random noise:
+Перед публикацией ключи реально проверяются, а при финальном отборе выше шанс у тех ключей, которые лучше показывали себя в предыдущих циклах. Итоговый список остается живым и меняющимся, но это не случайный шум:
 
-- dead or obviously broken entries are filtered out;
-- duplicate keys are removed before validation;
-- keys with stronger recent history are more likely to stay in the final `200`;
-- unstable keys can still appear, but much less often than consistently healthy ones.
+- мертвые и явно нерабочие ключи отсекаются;
+- дубликаты удаляются до валидации;
+- ключи с лучшей историей чаще попадают в итоговые `200`;
+- нестабильные ключи тоже могут появляться, но заметно реже.
 
-## Validation model
+## Как устроена проверка
 
-For each candidate key the checker:
+Для каждого кандидата checker:
 
-1. parses the VLESS link;
-2. optionally performs a cheap TCP precheck;
-3. starts a temporary local `xray` config for that key;
-4. sends a real HTTP request through the proxy;
-5. records the result in a persistent rating file;
-6. rebuilds the final public list from the keys that passed.
+1. парсит VLESS-ссылку;
+2. при необходимости делает дешевый TCP precheck;
+3. поднимает временную локальную конфигурацию `xray`;
+4. отправляет реальный HTTP-запрос через прокси;
+5. записывает результат в файл рейтингов;
+6. заново собирает публичный список только из успешно прошедших ключей.
 
-The goal is practical filtering, not a guarantee that a key will stay alive forever after publication.
+Задача этого репозитория не обещать, что ключ проживет бесконечно долго после публикации, а отсеивать явный мусор и повышать долю реально рабочих ключей в итоговом списке.
 
-## Upstream sources
+## Источники
 
-Default sources:
+По умолчанию используются:
 
 - `https://raw.githubusercontent.com/zieng2/wl/main/vless_lite.txt`
 - `https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile.txt`
 - `https://raw.githubusercontent.com/igareck/vpn-configs-for-russia/refs/heads/main/Vless-Reality-White-Lists-Rus-Mobile-2.txt`
 
-## Repository layout
+## Структура репозитория
 
-- `data/short-key-list.txt` — published public list.
-- `scripts/check_key_list.py` — validator and rating-aware selector.
-- `scripts/run_pipeline.py` — end-to-end runner.
-- `scripts/publish_key_list.py` — publish step for git updates.
-- `deploy/systemd/` — example service and timer units.
+- `data/short-key-list.txt` — публичный итоговый список.
+- `scripts/check_key_list.py` — валидатор и селектор с учетом рейтинга.
+- `scripts/run_pipeline.py` — полный пайплайн проверки и публикации.
+- `scripts/publish_key_list.py` — шаг публикации git-обновления.
+- `deploy/systemd/` — пример `service` и `timer` для сервера.
 
-## For operators
+## Для тех, кто разворачивает у себя
 
-This repository is public, but operational secrets are not stored in git:
+Репозиторий публичный, но рабочие секреты в git не хранятся:
 
-- `.env` stays only on the server;
-- runtime ratings stay in `state/key-ratings.json` on the server;
-- the published repository only receives the final list and code changes.
+- `.env` существует только на сервере;
+- рейтинги и runtime-state лежат локально на сервере в `state/key-ratings.json`;
+- в публичный репозиторий попадают только код и итоговый файл.
 
-Minimal local run:
+Минимальный локальный запуск:
 
 ```bash
 cp .env.example .env
