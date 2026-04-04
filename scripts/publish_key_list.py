@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
 import subprocess
 import tempfile
@@ -17,6 +18,16 @@ def git_output(repo: Path, *args: str) -> str:
     if proc.returncode != 0:
         raise SystemExit(proc.stderr.strip() or proc.stdout.strip() or f"git {' '.join(args)} failed")
     return proc.stdout.strip()
+
+
+def configure_identity(repo: Path) -> None:
+    name = os.getenv("PUBLISH_GIT_NAME", "checker")
+    email = os.getenv("PUBLISH_GIT_EMAIL", "checker@server")
+
+    for key, value in (("user.name", name), ("user.email", email)):
+        proc = git(repo, "config", key, value)
+        if proc.returncode != 0:
+            raise SystemExit(proc.stderr.strip() or proc.stdout.strip() or f"git config {key} failed")
 
 
 def main() -> int:
@@ -44,6 +55,8 @@ def main() -> int:
         )
         if clone.returncode != 0:
             raise SystemExit(clone.stderr.strip() or clone.stdout.strip() or "git clone failed")
+
+        configure_identity(publish_repo)
 
         target_path = publish_repo / args.target_file
         target_path.parent.mkdir(parents=True, exist_ok=True)
